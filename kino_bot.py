@@ -1,8 +1,10 @@
 from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, filters, ContextTypes
+from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, ContextTypes, filters
 import re
+import os
 
-TOKEN = "token"
+# TOKEN endi Render’dan olinadi
+TOKEN = os.getenv("TOKEN")
 
 movies = {}
 
@@ -15,6 +17,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def channel_post(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.channel_post
 
+    if not message:
+        return
+
     text = message.caption or message.text
     if not text:
         return
@@ -24,15 +29,16 @@ async def channel_post(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if match:
         code = match.group()
 
+        file_id = None
+
         if message.video:
             file_id = message.video.file_id
         elif message.document:
             file_id = message.document.file_id
-        else:
-            return
 
-        movies[code] = file_id
-        print(f"Saqlandi: {code}")
+        if file_id:
+            movies[code] = file_id
+            print(f"Saqlandi: {code}")
 
 # Foydalanuvchi yozsa
 async def user_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -43,15 +49,13 @@ async def user_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("❌ Bunday kino topilmadi")
 
+# App yaratish
 app = ApplicationBuilder().token(TOKEN).build()
 
-# ✅ START qo‘shildi
+# Handlers
 app.add_handler(CommandHandler("start", start))
-
-# Kanal postlari
-app.add_handler(MessageHandler(filters.UpdateType.CHANNEL_POST, channel_post))
-
-# User yozsa
+app.add_handler(MessageHandler(filters.UpdateType.CHANNEL_POSTS, channel_post))
 app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), user_message))
 
+# Botni ishga tushirish
 app.run_polling()
