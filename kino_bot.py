@@ -2,7 +2,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, filters, ContextTypes
 import re
 
-TOKEN = "8622956333:AAF3XX19dkkGGy2O8eICIrn2OqEXcbtAfZs"
+TOKEN = "token"
 
 movies = {}
 
